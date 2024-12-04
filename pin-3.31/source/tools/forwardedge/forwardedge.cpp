@@ -25,7 +25,7 @@ UINT64 threadCount = 0; //total number of threads, including main thread
 
 std::ostream* out = &cerr;
 
-UINT64 indrectCount = 0;
+UINT64 indirectCount = 0;
 
 /* ===================================================================== */
 // Command line switches
@@ -96,8 +96,8 @@ VOID Trace(TRACE trace, VOID* v)
 }
 
 VOID Instruction(INS ins, VOID* v) {
-    if (INS_IsIndirectControlFlow) {
-        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_END)
+    if (INS_IsIndirectControlFlow(ins)) {
+        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_END);
     }
 }
 
@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
         // Register function to be called to instrument traces
         TRACE_AddInstrumentFunction(Trace, 0);
 
-        INS_AddInstrumentFunction(Instruction, 0)
+        INS_AddInstrumentFunction(Instruction, 0);
 
         // Register function to be called for every thread before it starts running
         PIN_AddThreadStartFunction(ThreadStart, 0);
