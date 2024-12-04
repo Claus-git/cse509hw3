@@ -25,6 +25,8 @@ UINT64 threadCount = 0; //total number of threads, including main thread
 
 std::ostream* out = &cerr;
 
+UINT64 indrectCount = 0;
+
 /* ===================================================================== */
 // Command line switches
 /* ===================================================================== */
@@ -67,6 +69,10 @@ VOID CountBbl(UINT32 numInstInBbl)
     insCount += numInstInBbl;
 }
 
+VOID countIndirect() {
+    indirectCount++;
+}
+
 /* ===================================================================== */
 // Instrumentation callbacks
 /* ===================================================================== */
@@ -86,6 +92,12 @@ VOID Trace(TRACE trace, VOID* v)
     {
         // Insert a call to CountBbl() before every basic bloc, passing the number of instructions
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CountBbl, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
+    }
+}
+
+VOID Instruction(INS ins, VOID* v) {
+    if (INS_IsIndirectControlFlow) {
+        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_END)
     }
 }
 
@@ -115,6 +127,7 @@ VOID Fini(INT32 code, VOID* v)
     *out << "Number of instructions: " << insCount << endl;
     *out << "Number of basic blocks: " << bblCount << endl;
     *out << "Number of threads: " << threadCount << endl;
+    *out << "Number of indirect control flows: " << indirectCount << endl;
     *out << "===============================================" << endl;
 }
 
@@ -145,6 +158,8 @@ int main(int argc, char* argv[])
     {
         // Register function to be called to instrument traces
         TRACE_AddInstrumentFunction(Trace, 0);
+
+        INS_AddInstrumentFunction(Instruction, 0)
 
         // Register function to be called for every thread before it starts running
         PIN_AddThreadStartFunction(ThreadStart, 0);
