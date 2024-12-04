@@ -1,0 +1,7 @@
+===============================================
+MyPinTool analysis results: 
+Number of instructions: 185912
+Number of basic blocks: 42705
+Number of threads: 1
+Number of indirect control flows: 92
+===============================================

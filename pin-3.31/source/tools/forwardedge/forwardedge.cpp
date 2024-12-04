@@ -96,8 +96,9 @@ VOID Trace(TRACE trace, VOID* v)
 }
 
 VOID Instruction(INS ins, VOID* v) {
-    if (INS_IsIndirectControlFlow(ins)) {
+    if (INS_IsIndirectControlFlow(ins) && INS_IsCall(ins)) {
         INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_END);
+        // *out << ins << endl;
     }
 }
 
