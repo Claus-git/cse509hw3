@@ -26,6 +26,12 @@ UINT64 insCount    = 0; //number of dynamically executed instructions
 UINT64 bblCount    = 0; //number of dynamically executed basic blocks
 UINT64 threadCount = 0; //total number of threads, including main thread
 
+ADDRINT offset;
+ADDRINT lowest;
+ADDRINT highest;
+
+bool loaded = false;
+
 std::ostream* out = &cerr;
 
 UINT64 indirectCount = 0;
@@ -77,8 +83,17 @@ VOID CountBbl(UINT32 numInstInBbl)
 }
 
 VOID countIndirect(ADDRINT target) {
-    *out << hex << target << endl;
-    indirectCount++;
+    if(loaded) {
+        if (target < highest && target > lowest) {
+            if (addrMap.count(target-lowest) == 0) {
+                printf("address not allowed %lx absolute addr %lx\n", target-lowest, target);
+                exit(0);
+            }
+            *out << hex << target-lowest << endl;
+            indirectCount++;
+        }
+    }
+    
 }
 
 /* ===================================================================== */
@@ -107,6 +122,30 @@ VOID Instruction(INS ins, VOID* v) {
     if (INS_IsIndirectControlFlow(ins) && INS_IsCall(ins)) {
         INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_BRANCH_TARGET_ADDR, IARG_END);
         // *out << ins << endl;
+    }
+}
+
+VOID ApplicationStart(VOID* v) {
+
+}
+
+VOID ImageLoad (IMG img, VOID* V) {
+    if (IMG_IsMainExecutable(img)) {
+        loaded = true;
+        offset = IMG_LoadOffset(img);
+        lowest = IMG_LowAddress(img);
+        highest = IMG_HighAddress(img);
+        printf("highest: %lx lowest: %lx\n", highest, lowest);
+    }
+
+    // for( SYM sym= IMG_RegsymHead(img); SYM_Valid(sym); sym = SYM_Next(sym) ) {
+    //     std::cerr << SYM_Name(sym) << endl;
+    // }
+}
+
+VOID ImageUnload(IMG img, VOID* v) {
+    if (IMG_IsMainExecutable(img)) {
+        loaded = false;
     }
 }
 
@@ -156,6 +195,10 @@ int main(int argc, char* argv[])
         return Usage();
     }
 
+    PIN_InitSymbols();
+
+    
+
 
 
     string inFileName = KnobInputFile.Value();
@@ -164,7 +207,7 @@ int main(int argc, char* argv[])
         inFile.open(inFileName);
         int addr;
         while (inFile >> hex >> addr) {
-            printf("read address %x\n", addr);
+            // printf("read address %x\n", addr);
             addrMap[addr] = true;
         }
     }
@@ -184,8 +227,13 @@ int main(int argc, char* argv[])
 
         INS_AddInstrumentFunction(Instruction, 0);
 
+        IMG_AddInstrumentFunction(ImageLoad, 0);
+        IMG_AddUnloadFunction(ImageUnload, 0);
+
         // Register function to be called for every thread before it starts running
         PIN_AddThreadStartFunction(ThreadStart, 0);
+
+        PIN_AddApplicationStartFunction(ApplicationStart, 0);
 
         // Register function to be called when the application exits
         PIN_AddFiniFunction(Fini, 0);
