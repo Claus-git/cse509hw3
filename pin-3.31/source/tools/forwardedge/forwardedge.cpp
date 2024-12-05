@@ -11,9 +11,12 @@
 #include "pin.H"
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 using std::cerr;
 using std::endl;
 using std::string;
+using std::unordered_map;
+using std::hex;
 
 /* ================================================================== */
 // Global variables
@@ -27,13 +30,17 @@ std::ostream* out = &cerr;
 
 UINT64 indirectCount = 0;
 
+unordered_map<int, bool> addrMap;
+
 /* ===================================================================== */
 // Command line switches
 /* ===================================================================== */
-KNOB< string > KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "", "specify file name for MyPinTool output");
+KNOB< string > KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "", "specify file name for forwardedge output");
 
 KNOB< BOOL > KnobCount(KNOB_MODE_WRITEONCE, "pintool", "count", "1",
                        "count instructions, basic blocks and threads in the application");
+
+KNOB< string > KnobInputFile(KNOB_MODE_WRITEONCE, "pintool", "i", "", "specify file name for forwardedge input");
 
 /* ===================================================================== */
 // Utilities
@@ -69,7 +76,8 @@ VOID CountBbl(UINT32 numInstInBbl)
     insCount += numInstInBbl;
 }
 
-VOID countIndirect() {
+VOID countIndirect(ADDRINT target) {
+    *out << hex << target << endl;
     indirectCount++;
 }
 
@@ -97,7 +105,7 @@ VOID Trace(TRACE trace, VOID* v)
 
 VOID Instruction(INS ins, VOID* v) {
     if (INS_IsIndirectControlFlow(ins) && INS_IsCall(ins)) {
-        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_END);
+        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countIndirect, IARG_BRANCH_TARGET_ADDR, IARG_END);
         // *out << ins << endl;
     }
 }
@@ -147,6 +155,20 @@ int main(int argc, char* argv[])
     {
         return Usage();
     }
+
+
+
+    string inFileName = KnobInputFile.Value();
+    if (!inFileName.empty()) {
+        std::ifstream inFile;
+        inFile.open(inFileName);
+        int addr;
+        while (inFile >> hex >> addr) {
+            printf("read address %x\n", addr);
+            addrMap[addr] = true;
+        }
+    }
+    
 
     string fileName = KnobOutputFile.Value();
 
