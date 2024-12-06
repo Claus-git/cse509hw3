@@ -206,10 +206,13 @@ int main(int argc, char* argv[])
         std::ifstream inFile;
         inFile.open(inFileName);
         int addr;
+        int numaddr = 0;
         while (inFile >> hex >> addr) {
             // printf("read address %x\n", addr);
             addrMap[addr] = true;
+            numaddr++;
         }
+        printf("numaddr: %d\n", numaddr);
     }
     
 
