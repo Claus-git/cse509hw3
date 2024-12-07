@@ -39,7 +39,8 @@ unordered_map<int, bool> addrMap;
 /* ===================================================================== */
 
 KNOB< string > KnobInputFile(KNOB_MODE_WRITEONCE, "pintool", "f", "", "specify file name for forwardedge input");
-
+KNOB<ADDRINT> KnobUserLowest(KNOB_MODE_WRITEONCE, "pintool", "low", "0", "specify lowest address");
+KNOB<ADDRINT> KnobUserHighest(KNOB_MODE_WRITEONCE, "pintool", "high", "0", "specify highest address");
 /* ===================================================================== */
 // Analysis routines
 /* ===================================================================== */
@@ -72,10 +73,19 @@ VOID ImageLoad (IMG img, VOID* V) {
     if (IMG_IsMainExecutable(img)) {
         loaded = true;
         offset = IMG_LoadOffset(img);
-        lowest = IMG_LowAddress(img);
-        highest = IMG_HighAddress(img);
+
+        if (KnobUserLowest.Value() != 0 && KnobUserHighest.Value() != 0) {
+            lowest = KnobUserLowest.Value();
+            highest = KnobUserHighest.Value();
+        } else {
+            lowest = IMG_LowAddress(img);
+            highest = IMG_HighAddress(img);
+            printf("TEST");
+        }
+
         printf("highest: %lx lowest: %lx\n", highest, lowest);
     }
+    
 }
 
 VOID ImageUnload(IMG img, VOID* v) {
