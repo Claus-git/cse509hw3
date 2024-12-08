@@ -74,7 +74,7 @@ VOID ImageLoad (IMG img, VOID* V) {
         loaded = true;
         offset = IMG_LoadOffset(img);
 
-        if (KnobUserLowest.Value() > KnobUserHighest.Value() ) {
+        if (KnobUserLowest.Value() <= KnobUserHighest.Value() ) {
             lowest = IMG_LowAddress(img) + KnobUserLowest.Value();
             highest = IMG_LowAddress(img) + KnobUserHighest.Value();
         } else {
