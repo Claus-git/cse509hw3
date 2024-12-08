@@ -74,13 +74,12 @@ VOID ImageLoad (IMG img, VOID* V) {
         loaded = true;
         offset = IMG_LoadOffset(img);
 
-        if (KnobUserLowest.Value() != 0 && KnobUserHighest.Value() != 0) {
-            lowest = KnobUserLowest.Value();
-            highest = KnobUserHighest.Value();
+        if (KnobUserLowest.Value() > KnobUserHighest.Value() ) {
+            lowest = IMG_LowAddress(img) + KnobUserLowest.Value();
+            highest = IMG_LowAddress(img) + KnobUserHighest.Value();
         } else {
             lowest = IMG_LowAddress(img);
             highest = IMG_HighAddress(img);
-            printf("TEST");
         }
 
         printf("highest: %lx lowest: %lx\n", highest, lowest);
