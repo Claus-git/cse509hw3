@@ -1,3 +1,18 @@
+
+
+## Generating Valid Addresses
+The `findaddrs.py` script analyzes a binary to extract potential valid addresses for indirect calls. The script uses `readelf` and `objdump` to identify relevant addresses and outputs them to a file.
+
+### Usage
+1. Run the script with the binary file as an argument:
+   ```bash
+   python3 findaddrs.py <binary_file>
+   ```
+   This will generate a file named `<binary_file>addrs.out` containing the extracted addresses.
+
+---
+
+
 # Forward Edge Control Flow Integrity (CFI) Pintool
 
 This project implements a Forward Edge Control Flow Integrity using the Intel PIN tool framework. It ignores indirect calls outside of [low,high]. If the target is in the range [low,high], it should be allowed if the target address is in file f.
